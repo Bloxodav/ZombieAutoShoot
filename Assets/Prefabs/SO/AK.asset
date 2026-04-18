@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f00ff16f4beefc444938c191f41699bd, type: 3}
+  m_Name: AK
+  m_EditorClassIdentifier: 
+  weaponName: AK47
+  weaponType: 1
+  damage: 40
+  range: 12
+  fireRate: 0.7
+  shootAngle: 360
+  pellets: 6
+  spreadAngle: 8
+  muzzleFlash: {fileID: 1370874438154576188, guid: c02083b1627cc40449e4e7c3ed1f2a65, type: 3}
+  hitEffect: {fileID: 4787146697146794704, guid: e9050f838eb01db44b8958e4d8266866, type: 3}
+  hitSound: {fileID: 8300000, guid: 0d72bb1b6263a2b4bae008bc757e6648, type: 3}
+  shootSounds:
+  - {fileID: 8300000, guid: c227b10053048984a9836db250bec29a, type: 3}
+  - {fileID: 8300000, guid: 76350ba06e65b9042921e682fdd831d2, type: 3}
+  - {fileID: 8300000, guid: 3bd37ff7f9b7dcd489aec64e9db4cb4e, type: 3}
+  reloadSound: {fileID: 8300000, guid: 333f960f07d14fa43b30282d590f45e0, type: 3}
+  magazineSize: 30
+  reloadTime: 1.5

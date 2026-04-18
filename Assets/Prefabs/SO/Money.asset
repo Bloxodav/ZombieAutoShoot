@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cd817fe99bcb6dd4491ffda0a3761e74, type: 3}
+  m_Name: Money
+  m_EditorClassIdentifier: 
+  pickupType: 0
+  dropChance: 1
+  prefab: {fileID: 5324695540777317749, guid: 7e9ff0f73d1cd5b4db7ad1e77a625e08, type: 3}
+  pickupSound: {fileID: 8300000, guid: 728dd4d7dfd170f4d90e2e57bd40e0eb, type: 3}
+  pickupEffect: {fileID: 7888857835762348946, guid: 84dab4a8cf751fc4181b5f09a6186c21, type: 3}
+  lifetime: 99
+  hoverHeight: 0.5
+  amplitude: 0.15
+  frequency: 2.5
+  rotationSpeed: 80
+  progress: {fileID: 11400000, guid: 88b9fe60ffc0a9a47bfdc813c48c4a17, type: 2}
+  minMoney: 30
+  maxMoney: 30
+  minHeal: 15
+  maxHeal: 30
+  minAmmo: 8
+  maxAmmo: 16

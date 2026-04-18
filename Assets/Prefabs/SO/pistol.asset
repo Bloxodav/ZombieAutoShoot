@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f00ff16f4beefc444938c191f41699bd, type: 3}
+  m_Name: pistol
+  m_EditorClassIdentifier: 
+  weaponName: pistol
+  weaponType: 0
+  damage: 34
+  range: 12
+  fireRate: 1
+  shootAngle: 90
+  pellets: 6
+  spreadAngle: 8
+  hitEffect: {fileID: 4787146697146794704, guid: e9050f838eb01db44b8958e4d8266866, type: 3}
+  shootSound: {fileID: 8300000, guid: 4e6c8f5a707f88046b4c728485f059c5, type: 3}
+  hitSound: {fileID: 8300000, guid: 0d72bb1b6263a2b4bae008bc757e6648, type: 3}
+  magazineSize: 30
+  reloadTime: 1.5
+  reloadSound: {fileID: 0}

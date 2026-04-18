@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cd817fe99bcb6dd4491ffda0a3761e74, type: 3}
+  m_Name: Ammo
+  m_EditorClassIdentifier: 
+  pickupType: 2
+  dropChance: 0.13
+  prefab: {fileID: 5324695540777317749, guid: f957fdd8b66dc8243a5596b0e595fbcf, type: 3}
+  pickupSound: {fileID: 8300000, guid: 8ed5b7fd35275c649b68264b7ef3e641, type: 3}
+  pickupEffect: {fileID: 7888857835762348946, guid: fe06a4265fcdbee41af177cae2ae56d2, type: 3}
+  lifetime: 15
+  hoverHeight: 0.5
+  amplitude: 0.15
+  frequency: 2.5
+  rotationSpeed: 80
+  progress: {fileID: 11400000, guid: 88b9fe60ffc0a9a47bfdc813c48c4a17, type: 2}
+  minMoney: 10
+  maxMoney: 50
+  minHeal: 15
+  maxHeal: 30
+  minAmmo: 8
+  maxAmmo: 16

@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef44abf2db06f1c4e92d18cdf18923cf, type: 3}
+  m_Name: Level
+  m_EditorClassIdentifier: 
+  baseZombiesPerWave: 5
+  zombiesIncreasePerLevels: 1
+  zombiesIncreaseInterval: 2
+  maxZombiesPerWave: 100
+  baseZombieHealth: 70
+  healthMultiplierPerLevel: 0.05
+  maxHealthMultiplier: 10
+  baseZombieDamage: 10
+  damageMultiplierPerLevel: 0.03
+  maxDamageMultiplier: 5
+  baseZombieSpeed: 9
+  speedIncreasePerLevel: 0.022
+  maxZombieSpeed: 11
+  baseWaveCount: 3
+  waveIncreaseInterval: 5
+  maxWaveCount: 10
+  baseCashReward: 33
+  cashRewardMultiplierPerLevel: 0.05
