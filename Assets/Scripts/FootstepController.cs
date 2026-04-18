@@ -1,33 +1,31 @@
-using UnityEngine;
+п»їusing UnityEngine;
 using System.Collections;
 
 public class FootstepController : MonoBehaviour
 {
-    [Header("Audio Sources (ноги)")]
+    [Header("Audio Sources (РЅРѕРіРё)")]
     public AudioSource rightFoot;
     public AudioSource leftFoot;
 
-    [Header("Звуки шагов")]
+    [Header("Р—РІСѓРєРё С€Р°РіРѕРІ")]
     public AudioClip[] footstepSounds;
 
-    [Header("Громкость")]
+    [Header("Р“СЂРѕРјРєРѕСЃС‚СЊ")]
     public AudioSettingsData audioSettings;
     [Range(0f, 0.3f)] public float volumeVariation = 0.1f;
     [Range(0f, 0.2f)] public float pitchVariation = 0.1f;
 
-    [Header("Пыль")]
+    [Header("РџС‹Р»СЊ")]
     public ParticleSystem dustPrefab;
 
-    [Header("Кости ног")]
+    [Header("РљРѕСЃС‚Рё РЅРѕРі")]
     public Transform rightFootBone;
     public Transform leftFootBone;
 
-    [Header("Интервал шага (сек)")]
-    public float stepInterval = 0.4f;
-
-    private bool _isRightNext = true;
     private AudioClip _lastClip;
-    private float _stepTimer;
+    private float _lastStepTime; // в†ђ РґРѕР±Р°РІСЊ РїРѕР»Рµ
+    private const float MinStepInterval = 0.15f; // РјРёРЅРёРјСѓРј РјРµР¶РґСѓ С€Р°РіР°РјРё
+
 
     private ParticleSystem[] _rightPool = new ParticleSystem[3];
     private ParticleSystem[] _leftPool = new ParticleSystem[3];
@@ -37,55 +35,54 @@ public class FootstepController : MonoBehaviour
     private void Awake()
     {
         if (dustPrefab == null) return;
-
         for (int i = 0; i < 3; i++)
         {
             _rightPool[i] = Instantiate(dustPrefab);
             _rightPool[i].gameObject.SetActive(false);
-
             _leftPool[i] = Instantiate(dustPrefab);
             _leftPool[i].gameObject.SetActive(false);
         }
     }
 
-    public void OnMoving(float deltaTime)
+    public void OnRightFootstep()
     {
-        _stepTimer -= deltaTime;
-        if (_stepTimer > 0f) return;
-
-        _stepTimer = stepInterval;
-        PlaySound();
-        PlayDust();
-        _isRightNext = !_isRightNext;
+        if (Time.time - _lastStepTime < MinStepInterval) return; // в†ђ Р±Р»РѕРєРёСЂСѓРµРј РґСѓР±Р»Рё
+        _lastStepTime = Time.time;
+        PlaySound(isRight: true);
+        PlayDust(isRight: true);
     }
 
-    public void OnStopped()
+    public void OnLeftFootstep()
     {
-        _stepTimer = 0f;
+        if (Time.time - _lastStepTime < MinStepInterval) return;
+        _lastStepTime = Time.time;
+        PlaySound(isRight: false);
+        PlayDust(isRight: false);
     }
 
-    private void PlaySound()
+    private void PlaySound(bool isRight)
     {
         if (footstepSounds == null || footstepSounds.Length == 0) return;
 
         float baseVolume = audioSettings != null ? audioSettings.sfxVolume : 0.7f;
         if (baseVolume <= 0.001f) return;
 
-        AudioSource source = _isRightNext ? rightFoot : leftFoot;
-        float volume = Mathf.Clamp01(baseVolume + Random.Range(-volumeVariation, volumeVariation));
+        AudioSource source = isRight ? rightFoot : leftFoot;
+        if (source == null) return;
 
+        float volume = Mathf.Clamp01(baseVolume + Random.Range(-volumeVariation, volumeVariation));
         source.pitch = 1f + Random.Range(-pitchVariation, pitchVariation);
         source.PlayOneShot(GetRandomClip(), volume);
     }
 
-    private void PlayDust()
+    private void PlayDust(bool isRight)
     {
         if (dustPrefab == null) return;
 
         ParticleSystem ps;
         Transform bone;
 
-        if (_isRightNext)
+        if (isRight)
         {
             ps = _rightPool[_rightIdx];
             _rightIdx = (_rightIdx + 1) % 3;
@@ -100,10 +97,8 @@ public class FootstepController : MonoBehaviour
 
         ps.transform.position = bone != null ? bone.position : transform.position;
         ps.transform.rotation = Quaternion.identity;
-
         ps.gameObject.SetActive(true);
         ps.Play();
-
         StartCoroutine(ReturnToPoolAfterPlay(ps));
     }
 
@@ -118,7 +113,6 @@ public class FootstepController : MonoBehaviour
     private AudioClip GetRandomClip()
     {
         if (footstepSounds.Length == 1) return footstepSounds[0];
-
         AudioClip clip;
         int attempts = 0;
         do
@@ -127,7 +121,6 @@ public class FootstepController : MonoBehaviour
             attempts++;
         }
         while (clip == _lastClip && attempts < 5);
-
         _lastClip = clip;
         return clip;
     }

@@ -8,6 +8,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private JoystickController joystick;
     [SerializeField] private float moveSpeed = 5f;
     [SerializeField] private Transform cameraTransform;
+    private float _baseSpeed;
 
     [Header("Animation")]
     [SerializeField] private Animator animator;
@@ -28,8 +29,8 @@ public class PlayerController : MonoBehaviour
         rb = GetComponent<Rigidbody>();
         combat = GetComponent<PlayerCombat>();
         footsteps = GetComponent<FootstepController>();
-
-        rb.interpolation = RigidbodyInterpolation.Interpolate;
+        _baseSpeed = characterData.moveSpeed;
+        moveSpeed = characterData.moveSpeed + progress.speedLevel * 0.5f;
 
         float bonusSpeed = progress.speedLevel * 0.5f;
         moveSpeed = characterData.moveSpeed + bonusSpeed;
@@ -43,6 +44,8 @@ public class PlayerController : MonoBehaviour
 
         bool isMoving = input.sqrMagnitude >= 0.01f;
         animator.SetBool("isMoving", isMoving);
+        float speedRatio = _baseSpeed > 0f ? moveSpeed / _baseSpeed : 1f;
+        animator.SetFloat("LocomotionSpeed", speedRatio);
 
         Vector3 camForward = cameraTransform.forward; camForward.y = 0; camForward.Normalize();
         Vector3 camRight = cameraTransform.right; camRight.y = 0; camRight.Normalize();
@@ -69,12 +72,6 @@ public class PlayerController : MonoBehaviour
         {
             animator.SetFloat("MoveX", 0f, animationDampTime, dt);
             animator.SetFloat("MoveY", input.magnitude, animationDampTime, dt);
-        }
-
-        if (footsteps != null)
-        {
-            if (isMoving) footsteps.OnMoving(dt);
-            else footsteps.OnStopped();
         }
     }
 }

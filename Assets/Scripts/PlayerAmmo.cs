@@ -92,6 +92,10 @@ public class PlayerAmmo : MonoBehaviour
     {
         _isReloading = true;
 
+        // Запускаем анимацию
+        var anim = GetComponentInChildren<Animator>();
+        if (anim) anim.SetBool("isReloading", true);
+
         var reloadSound = weapon && weapon.data ? weapon.data.reloadSound : null;
         if (audioSource && reloadSound)
             audioSource.PlayOneShot(reloadSound);
@@ -100,9 +104,10 @@ public class PlayerAmmo : MonoBehaviour
 
         int needed = _magazineSize - _currentInMagazine;
         int toLoad = Mathf.Min(needed, _currentAmmo);
-
         _currentAmmo -= toLoad;
         _currentInMagazine += toLoad;
+
+        if (anim) anim.SetBool("isReloading", false);
 
         _isReloading = false;
         UpdateUI();

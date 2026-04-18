@@ -111,6 +111,9 @@ MonoBehaviour:
   minStopDistance: 1.5
   attackCooldown: 1
   damageBarSpeed: 5
+  alliedDuration: 8
+  alliedTintColor: {r: 0.2, g: 1, b: 0.3, a: 1}
+  alliedSpeedMultiplier: 1.3
   deathParticlesPrefab: {fileID: 4397334591890123670, guid: b0159ffb3464ec5478e3f6e6ce51d561, type: 3}
   timeBeforeSmoke: 0
   animator: {fileID: 1900576621775561624}

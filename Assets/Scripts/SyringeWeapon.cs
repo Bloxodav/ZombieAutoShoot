@@ -188,17 +188,28 @@ public class SyringeWeapon : MonoBehaviour
             trail = Instantiate(data.trailPrefab).GetComponent<TrailRenderer>();
 
         Vector3 start = bulletSpawnPoint.position;
+        float dist = Vector3.Distance(start, end);
+
         trail.Clear();
         trail.transform.position = start;
         trail.gameObject.SetActive(true);
+        trail.AddPosition(start);
+
+        if (dist < 0.01f)
+        {
+            yield return new WaitForSeconds(trail.time);
+            trail.Clear();
+            trail.gameObject.SetActive(false);
+            _trailPool.Enqueue(trail);
+            yield break;
+        }
 
         float speed = data.projectileSpeed;
-        float dist = Vector3.Distance(start, end);
         float t = 0f;
 
         while (t < 1f)
         {
-            t += Time.deltaTime * speed / Mathf.Max(dist, 0.01f);
+            t += Time.deltaTime * speed / dist;
             trail.transform.position = Vector3.Lerp(start, end, Mathf.Min(t, 1f));
             yield return null;
         }
