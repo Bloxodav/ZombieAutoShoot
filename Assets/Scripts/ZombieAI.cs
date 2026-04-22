@@ -130,7 +130,8 @@ public class ZombieAI : MonoBehaviour
         {
             agent.enabled = true;
             agent.isStopped = false;
-            agent.stoppingDistance = minStopDistance;
+            agent.stoppingDistance = 0f;
+            agent.autoBraking = false;
             _baseSpeed = agent.speed;
         }
 
@@ -312,7 +313,18 @@ public class ZombieAI : MonoBehaviour
         if (_currentHealth <= 0f)
             StartCoroutine(DieDelayed());
     }
-
+    public void SyncHealthToMax()
+    {
+        _currentHealth = maxHealth;
+        _targetDamageFill = 1f;
+        if (healthBarFill) healthBarFill.fillAmount = 1f;
+        if (damageBarFill) damageBarFill.fillAmount = 1f;
+        if (healthBarCanvas) healthBarCanvas.gameObject.SetActive(false);
+    }
+    public void SyncBaseSpeed()
+    {
+        if (agent) _baseSpeed = agent.speed;
+    }
     public void Vaccinate()
     {
         if (_isDead) return;

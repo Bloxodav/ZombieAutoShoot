@@ -18,9 +18,9 @@ MonoBehaviour:
   alliedDuration: 15
   muzzleFlash: {fileID: 1370874438154576188, guid: c02083b1627cc40449e4e7c3ed1f2a65, type: 3}
   hitEffect: {fileID: 4787146697146794704, guid: e9050f838eb01db44b8958e4d8266866, type: 3}
-  shootSound: {fileID: 8300000, guid: 07ed142bfb23e7146aa2b97363bb1d30, type: 3}
+  shootSound: {fileID: 8300000, guid: e484e445d0d4b22488e96e2f4cf35410, type: 3}
   hitSound: {fileID: 8300000, guid: 0d72bb1b6263a2b4bae008bc757e6648, type: 3}
   trailPrefab: {fileID: 3928528860053484037, guid: 3a1fc16d26595fe4e93f4ecb1ab87f7c, type: 3}
   magazineSize: 10
   reloadTime: 2
-  reloadSound: {fileID: 8300000, guid: 333f960f07d14fa43b30282d590f45e0, type: 3}
+  reloadSound: {fileID: 8300000, guid: 86f587ae00cc42543b6f78aa6d06f135, type: 3}

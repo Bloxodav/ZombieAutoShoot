@@ -108,7 +108,7 @@ MonoBehaviour:
   maxHealth: 100
   damage: 10
   attackRange: 3
-  minStopDistance: 1.5
+  minStopDistance: 0
   attackCooldown: 1
   damageBarSpeed: 5
   alliedDuration: 8

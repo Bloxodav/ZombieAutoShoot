@@ -138,7 +138,12 @@ public class ZombieWaveSpawner : MonoBehaviour
                     ai.maxHealth = levelConfig.GetZombieHealth(_currentLevel);
                     ai.damage = levelConfig.GetZombieDamage(_currentLevel);
                     if (ai.agent != null)
+                    {
                         ai.agent.speed = levelConfig.GetZombieSpeed(_currentLevel);
+                        ai.SyncBaseSpeed();
+                    }
+                        
+                    ai.SyncHealthToMax();
                 }
 
                 ai.target = player;

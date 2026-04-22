@@ -33,6 +33,9 @@ public class PlayerCombat : MonoBehaviour
     private bool _isAimed;
     private float _searchTimer;
 
+    private int _switchToSyringeHash;
+    private int _switchToRifleHash;
+
     private ShootMode _currentMode = ShootMode.Bullet;
 
     private static readonly Collider[] _overlapBuffer = new Collider[32];
@@ -51,6 +54,8 @@ public class PlayerCombat : MonoBehaviour
         _isFireHash = Animator.StringToHash("isFire");
         _isRifleHash = Animator.StringToHash("isRifle");
         _isPistolHash = Animator.StringToHash("isPistol");
+        _switchToSyringeHash = Animator.StringToHash("switchToSyringe");
+        _switchToRifleHash = Animator.StringToHash("switchToRifle");
     }
 
     private void Update()
@@ -111,7 +116,17 @@ public class PlayerCombat : MonoBehaviour
 
     public void ToggleShootMode()
     {
-        _currentMode = _currentMode == ShootMode.Bullet ? ShootMode.Syringe : ShootMode.Bullet;
+        if (_currentMode == ShootMode.Bullet)
+        {
+            _currentMode = ShootMode.Syringe;
+            animator.SetTrigger(_switchToSyringeHash);
+        }
+        else
+        {
+            _currentMode = ShootMode.Bullet;
+            animator.SetTrigger(_switchToRifleHash);
+        }
+
         ClearTarget();
         _searchTimer = 0f;
         playerAmmo?.SetDisplayMode(_currentMode);
