@@ -5,6 +5,7 @@ public class LocationCard : MonoBehaviour
 {
     public PlayerProgressSO progress;
     public int locationId;
+    private SelectedLocationLabel _locationLabel;
 
     [Tooltip("Рамка выделения — выключена по умолчанию")]
     public GameObject selectedBorder;
@@ -12,6 +13,7 @@ public class LocationCard : MonoBehaviour
     private void Start()
     {
         GetComponent<Button>().onClick.AddListener(OnClick);
+        _locationLabel = FindObjectOfType<SelectedLocationLabel>();
         RefreshBorder();
     }
 
@@ -25,8 +27,7 @@ public class LocationCard : MonoBehaviour
         foreach (var card in transform.parent.GetComponentsInChildren<LocationCard>())
             card.RefreshBorder();
 
-        var label = FindObjectOfType<SelectedLocationLabel>();
-        label?.Refresh();
+        _locationLabel?.Refresh();
     }
 
     public void RefreshBorder()

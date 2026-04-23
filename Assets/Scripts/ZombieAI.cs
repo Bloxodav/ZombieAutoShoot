@@ -35,9 +35,27 @@ public class ZombieAI : MonoBehaviour
     public Image healthBarFill;
     public Image damageBarFill;
     public Canvas healthBarCanvas;
+
+    [Header("Audio")]
     public AudioSource audioSource;
-    public AudioClip deathSound;
+
+    [Header("Звуки зомби (рычание)")]
+    public AudioClip[] growlSounds;
+    [Range(3f, 10f)] public float growlIntervalMin = 4f;
+    [Range(3f, 10f)] public float growlIntervalMax = 8f;
+
+    [Header("Звуки смерти")]
+    public AudioClip[] deathSounds;
+
+    [Header("Звук дыма")]
+    public AudioClip puffSound;
+    [Header("Звук атаки")]
     public AudioClip attackSound;
+
+    private float _nextGrowlTime;
+
+    public AudioSettingsData audioSettings;
+    [Range(0f, 1f)] public float growlVolume = 0.3f;
 
     [Header("Loot Drop")]
     public PickupDataSO[] lootTable;
@@ -100,13 +118,29 @@ public class ZombieAI : MonoBehaviour
         ResetState();
         ZombieFactionRegistry.Register(this);
         StartCoroutine(UpdateAI());
+        StartCoroutine(GrowlLoop());
     }
 
     private void OnDisable()
     {
         ZombieFactionRegistry.Unregister(this);
     }
+    private IEnumerator GrowlLoop()
+    {
+        yield return new WaitForSeconds(Random.Range(0f, growlIntervalMax));
 
+        while (!_isDead)
+        {
+            if (growlSounds != null && growlSounds.Length > 0 && audioSource != null)
+            {
+                var clip = growlSounds[Random.Range(0, growlSounds.Length)];
+                float vol = growlVolume * (audioSettings != null ? audioSettings.sfxVolume : 1f);
+                audioSource.PlayOneShot(clip, vol);
+            }
+
+            yield return new WaitForSeconds(Random.Range(growlIntervalMin, growlIntervalMax));
+        }
+    }
     public void ResetState()
     {
         OnDeath = null;
@@ -160,12 +194,17 @@ public class ZombieAI : MonoBehaviour
 
     private void Update()
     {
-        if (healthBarCanvas && healthBarCanvas.gameObject.activeInHierarchy && _cachedCameraTransform != null)
+        if (healthBarCanvas && healthBarCanvas.gameObject.activeInHierarchy
+            && _cachedCameraTransform != null)
             healthBarCanvas.transform.rotation = _cachedCameraTransform.rotation;
 
+        if (healthBarFill)
+            healthBarFill.fillAmount = Mathf.MoveTowards(
+                healthBarFill.fillAmount, _targetDamageFill, Time.deltaTime * damageBarSpeed * 10f); // быстрее
+
         if (damageBarFill)
-            damageBarFill.fillAmount = Mathf.Lerp(
-                damageBarFill.fillAmount, _targetDamageFill, Time.deltaTime * damageBarSpeed);
+            damageBarFill.fillAmount = Mathf.MoveTowards(
+                damageBarFill.fillAmount, _targetDamageFill, Time.deltaTime * damageBarSpeed); // медленнее
 
         if (Faction == ZombieFaction.Allied)
         {
@@ -301,13 +340,13 @@ public class ZombieAI : MonoBehaviour
     public void TakeDamage(float amount)
     {
         if (_isDead) return;
-        _currentHealth -= amount;
+        _currentHealth = Mathf.Max(_currentHealth - amount, 0f);
 
         if (healthBarCanvas)
         {
             healthBarCanvas.gameObject.SetActive(true);
-            if (healthBarFill) healthBarFill.fillAmount = _currentHealth / maxHealth;
-            _targetDamageFill = Mathf.Clamp01(_currentHealth / maxHealth);
+            _targetDamageFill = _currentHealth / maxHealth;
+            // обе полоски плавно догоняют target, красная в 3х быстрее белой
         }
 
         if (_currentHealth <= 0f)
@@ -384,13 +423,21 @@ public class ZombieAI : MonoBehaviour
         if (defaultLayer >= 0) gameObject.layer = defaultLayer;
 
         animator.SetTrigger(s_Die);
-        audioSource?.PlayOneShot(deathSound);
+
+        if (audioSource != null && deathSounds != null && deathSounds.Length > 0)
+        {
+            var clip = deathSounds[Random.Range(0, deathSounds.Length)];
+            if (clip != null) audioSource.PlayOneShot(clip);
+        }
 
         if (_collider) _collider.enabled = false;
         if (agent) { agent.isStopped = true; agent.enabled = false; }
         healthBarCanvas?.gameObject.SetActive(false);
 
         yield return new WaitForSeconds(timeBeforeSmoke);
+
+        if (audioSource != null && puffSound != null)
+            audioSource.PlayOneShot(puffSound);
 
         if (deathParticlesPrefab != null)
         {

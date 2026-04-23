@@ -30,7 +30,6 @@ public class PlayerController : MonoBehaviour
         combat = GetComponent<PlayerCombat>();
         footsteps = GetComponent<FootstepController>();
         _baseSpeed = characterData.moveSpeed;
-        moveSpeed = characterData.moveSpeed + progress.speedLevel * 0.5f;
 
         float bonusSpeed = progress.speedLevel * 0.5f;
         moveSpeed = characterData.moveSpeed + bonusSpeed;

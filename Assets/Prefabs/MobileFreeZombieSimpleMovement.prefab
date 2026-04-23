@@ -110,8 +110,8 @@ MonoBehaviour:
   attackRange: 3
   minStopDistance: 0
   attackCooldown: 1
-  damageBarSpeed: 5
-  alliedDuration: 8
+  damageBarSpeed: 3
+  alliedDuration: 15
   alliedTintColor: {r: 0.2, g: 1, b: 0.3, a: 1}
   alliedSpeedMultiplier: 1.3
   deathParticlesPrefab: {fileID: 4397334591890123670, guid: b0159ffb3464ec5478e3f6e6ce51d561, type: 3}
@@ -123,8 +123,24 @@ MonoBehaviour:
   damageBarFill: {fileID: 7406307956967928174}
   healthBarCanvas: {fileID: 3355713589259332748}
   audioSource: {fileID: 4808552492600763141}
-  deathSound: {fileID: 8300000, guid: 412845bcbfaacb64ba1d393b6242ad3b, type: 3}
-  attackSound: {fileID: 8300000, guid: e2fbe9196dfeb9a488c902843693d0dd, type: 3}
+  growlSounds:
+  - {fileID: 8300000, guid: ba3bcef3b65e354428fa67dd99a4a689, type: 3}
+  - {fileID: 8300000, guid: a5c37fb7348329d4aa9f8534a9e4b87e, type: 3}
+  - {fileID: 8300000, guid: f7093ac7edc7c1c478b40f21ad2f8b98, type: 3}
+  - {fileID: 8300000, guid: c7a5af5d9b6796646b0e3318bdc1b94d, type: 3}
+  growlIntervalMin: 4
+  growlIntervalMax: 8
+  deathSounds:
+  - {fileID: 8300000, guid: a38b94782e0d9a846a3562087ea71cc2, type: 3}
+  - {fileID: 8300000, guid: 6285253a4b1e5bd4da944f710c7a1934, type: 3}
+  - {fileID: 8300000, guid: f6a3fd77e2d3a1846a29d857801862aa, type: 3}
+  - {fileID: 8300000, guid: 8389687e5dede6c4f8dd08150940c9ad, type: 3}
+  - {fileID: 8300000, guid: 091d84ca59d08cd40ab994e9366845e2, type: 3}
+  - {fileID: 8300000, guid: 0e232b6f106a6a44a8b1a7d285199f79, type: 3}
+  puffSound: {fileID: 8300000, guid: 412845bcbfaacb64ba1d393b6242ad3b, type: 3}
+  attackSound: {fileID: 8300000, guid: c71b4d882d59b8743854609370d0397c, type: 3}
+  audioSettings: {fileID: 11400000, guid: d1f038a8dacd2e94286588c9abafdc8b, type: 2}
+  growlVolume: 0.3
   lootTable:
   - {fileID: 11400000, guid: de98894e5dadd4d4593c3b429d073c21, type: 2}
   - {fileID: 11400000, guid: 0386669661b93ae4c9512012bd9874c7, type: 2}
@@ -165,7 +181,7 @@ AudioSource:
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 0}
   m_PlayOnAwake: 1
-  m_Volume: 1
+  m_Volume: 0
   m_Pitch: 1
   Loop: 0
   Mute: 0
@@ -1402,7 +1418,7 @@ GameObject:
   - component: {fileID: 1007100071722490764}
   - component: {fileID: 5332600902431574635}
   m_Layer: 0
-  m_Name: zombie_survival_zombie_4
+  m_Name: zombie
   m_TagString: Zombie
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

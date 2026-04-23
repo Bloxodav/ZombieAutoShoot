@@ -201,6 +201,7 @@ public class ZombieWaveSpawner : MonoBehaviour
         if (!infoText) return;
         infoText.text = $"WAVE {_currentWave}/{_totalWaves}";
         infoText.gameObject.SetActive(true);
+        CancelInvoke(nameof(HideInfoText));
         Invoke(nameof(HideInfoText), 2f);
     }
 
@@ -209,6 +210,7 @@ public class ZombieWaveSpawner : MonoBehaviour
         if (!infoText) return;
         infoText.text = $"WAVE {_currentWave} CLEARED";
         infoText.gameObject.SetActive(true);
+        CancelInvoke(nameof(HideInfoText));
         Invoke(nameof(HideInfoText), 2f);
     }
 

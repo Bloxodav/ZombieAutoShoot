@@ -26,12 +26,17 @@ public class PlayerCombat : MonoBehaviour
     [Header("Rotation")]
     [SerializeField] private float rotationSpeed = 8f;
 
+    [Header("Weapon Switch Sound")]
+    public AudioSource audioSource;
+    public AudioClip weaponSwitchSound;
+
     private Rigidbody _rb;
     private Transform _currentTarget;
     private ZombieAI _currentTargetAI;
     private float _aimTimer;
     private bool _isAimed;
     private float _searchTimer;
+    private bool _isSwitching = false;
 
     private int _switchToSyringeHash;
     private int _switchToRifleHash;
@@ -61,6 +66,8 @@ public class PlayerCombat : MonoBehaviour
     private void Update()
     {
         UpdateWeaponState();
+
+        if (_isSwitching) return;
 
         bool hasActiveWeapon = _currentMode == ShootMode.Bullet
             ? (currentWeapon != null && currentWeapon.data != null)
@@ -116,6 +123,16 @@ public class PlayerCombat : MonoBehaviour
 
     public void ToggleShootMode()
     {
+        if (_isSwitching) return;
+
+        _isSwitching = true;
+        ClearTarget();
+        _searchTimer = 0f;
+        animator.SetBool(_isFireHash, false);
+
+        if (audioSource && weaponSwitchSound)
+            audioSource.PlayOneShot(weaponSwitchSound);
+
         if (_currentMode == ShootMode.Bullet)
         {
             _currentMode = ShootMode.Syringe;
@@ -127,9 +144,11 @@ public class PlayerCombat : MonoBehaviour
             animator.SetTrigger(_switchToRifleHash);
         }
 
-        ClearTarget();
-        _searchTimer = 0f;
         playerAmmo?.SetDisplayMode(_currentMode);
+    }
+    public void OnWeaponSwitchComplete()
+    {
+        _isSwitching = false;
     }
 
     public void SetShootMode(ShootMode mode)
@@ -249,7 +268,7 @@ public class PlayerCombat : MonoBehaviour
         }
 
         nearestDist = nearest != null
-            ? Vector3.Distance(transform.position, nearest.position)
+            ? Mathf.Sqrt(nearestDist)
             : float.MaxValue;
 
         return nearest;

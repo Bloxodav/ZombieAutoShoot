@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 174905b5da1f21847b580916121149ff, type: 3}
   m_Name: PlayerProgress
   m_EditorClassIdentifier: 
-  cash: 1612
+  cash: 100
   gems: 50
   currentLevel: 1
   unlockedCharacterIds: 

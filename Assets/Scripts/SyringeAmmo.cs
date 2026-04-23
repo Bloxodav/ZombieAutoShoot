@@ -27,12 +27,6 @@ public class SyringeAmmo : MonoBehaviour
         OnAmmoChanged?.Invoke();
     }
 
-    private void Update()
-    {
-        if (!_isReloading && _inMagazine <= 0 && _inReserve > 0)
-            StartReload();
-    }
-
     public bool CanShoot() => !_isReloading && _inMagazine > 0;
 
     public void ConsumeAmmo()

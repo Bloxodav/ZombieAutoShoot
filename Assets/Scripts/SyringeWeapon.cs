@@ -24,6 +24,9 @@ public class SyringeWeapon : MonoBehaviour
     private float _nextFireTime;
     private bool _isReloading;
 
+    [Header("Animation")]
+    public Animator animator;
+
     private readonly Queue<TrailRenderer> _trailPool = new Queue<TrailRenderer>();
     private readonly Queue<ParticleSystem> _muzzlePool = new Queue<ParticleSystem>();
     private readonly Queue<ParticleSystem> _hitPool = new Queue<ParticleSystem>();
@@ -31,6 +34,7 @@ public class SyringeWeapon : MonoBehaviour
     private void Start()
     {
         if (!syringeAmmo) syringeAmmo = GetComponentInParent<SyringeAmmo>();
+        if (!animator) animator = GetComponentInParent<Animator>();
         WarmupPools();
     }
 
@@ -97,10 +101,14 @@ public class SyringeWeapon : MonoBehaviour
     {
         _isReloading = true;
 
+        if (animator) animator.SetTrigger(Animator.StringToHash("isReloading"));
+
+        yield return new WaitForSeconds(0.3f);
+
         if (audioSource && data.reloadSound)
             audioSource.PlayOneShot(data.reloadSound);
 
-        yield return new WaitForSeconds(data.reloadTime);
+        yield return new WaitForSeconds(data.reloadTime - 0.3f);
 
         _isReloading = false;
     }

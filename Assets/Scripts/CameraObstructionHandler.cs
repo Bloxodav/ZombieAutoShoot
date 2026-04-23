@@ -107,9 +107,10 @@ public class CameraObstructionHandler : MonoBehaviour
         _keys.Clear();
         _keys.AddRange(active.Keys);
 
-        foreach (var r in _keys)
+        foreach (var kvp in new Dictionary<Renderer, RenderState>(active))
         {
-            var state = active[r];
+            var r = kvp.Key;
+            var state = kvp.Value;
             if (_currentHitRenderers.Contains(r))
             {
                 FadeTo(state.workingMaterials, state.originalColors, targetAlpha, fadeSpeed);
