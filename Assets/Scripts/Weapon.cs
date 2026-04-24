@@ -25,6 +25,10 @@ public class Weapon : MonoBehaviour
     public int muzzlePoolSize = 5;
     public int hitPoolSize = 8;
 
+    [Header("Audio Settings")]
+    public AudioSettingsData audioSettings;
+    [Range(0f, 1f)] public float shootVolume = 1f;
+
     [HideInInspector] public float nextFireTime;
 
     private Queue<TrailRenderer> _trailPool = new Queue<TrailRenderer>();
@@ -111,7 +115,10 @@ public class Weapon : MonoBehaviour
 
         var shootSound = data.GetRandomShootSound();
         if (audioSource && shootSound)
-            audioSource.PlayOneShot(shootSound);
+        {
+            float vol = shootVolume * (audioSettings != null ? audioSettings.sfxVolume : 1f);
+            audioSource.PlayOneShot(shootSound, vol);
+        }
 
         switch (data.weaponType)
         {
@@ -221,7 +228,64 @@ public class Weapon : MonoBehaviour
         ps.gameObject.SetActive(false);
         _hitPool.Enqueue(ps);
     }
+    public void FireAtPoint(Vector3 worldPoint, LayerMask targetMask, LayerMask obstacleMask)
+    {
+        if (!CanFire()) return;
 
+        nextFireTime = Time.time + CurrentFireRate;
+        if (playerAmmo) playerAmmo.ConsumeAmmo();
+
+        PlayMuzzleFlash();
+
+        var shootSound = data.GetRandomShootSound();
+        if (audioSource && shootSound)
+            audioSource.PlayOneShot(shootSound);
+
+        if (data.weaponType == WeaponType.Shotgun)
+        {
+            FireAtPointShotgun(worldPoint, targetMask, obstacleMask);
+            return;
+        }
+
+        Vector3 origin = bulletSpawnPoint.position;
+        Vector3 dir = (worldPoint - origin).normalized;
+
+        if (Physics.Raycast(origin, dir, out RaycastHit hit, data.range, targetMask | obstacleMask))
+        {
+            StartCoroutine(SpawnTrail(hit.point));
+            if (((1 << hit.collider.gameObject.layer) & targetMask) != 0)
+                DealDamage(hit.transform, hit.point);
+        }
+        else
+        {
+            StartCoroutine(SpawnTrail(origin + dir * data.range));
+        }
+    }
+
+    private void FireAtPointShotgun(Vector3 worldPoint, LayerMask targetMask, LayerMask obstacleMask)
+    {
+        Vector3 origin = bulletSpawnPoint.position;
+        Vector3 baseDir = (worldPoint - origin).normalized;
+
+        for (int i = 0; i < data.pellets; i++)
+        {
+            Vector3 dir = Quaternion.Euler(
+                Random.Range(-data.spreadAngle, data.spreadAngle),
+                Random.Range(-data.spreadAngle, data.spreadAngle),
+                0f) * baseDir;
+
+            if (Physics.Raycast(origin, dir, out RaycastHit hit, data.range, targetMask | obstacleMask))
+            {
+                StartCoroutine(SpawnTrail(hit.point));
+                if (((1 << hit.collider.gameObject.layer) & targetMask) != 0)
+                    DealDamage(hit.transform, hit.point);
+            }
+            else
+            {
+                StartCoroutine(SpawnTrail(origin + dir * data.range));
+            }
+        }
+    }
     private IEnumerator SpawnTrail(Vector3 end)
     {
         TrailRenderer trail = null;

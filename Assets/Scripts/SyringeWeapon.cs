@@ -112,6 +112,46 @@ public class SyringeWeapon : MonoBehaviour
 
         _isReloading = false;
     }
+    public void FireAtPoint(Vector3 worldPoint, LayerMask targetMask, LayerMask obstacleMask)
+    {
+        if (!CanFire()) return;
+
+        _nextFireTime = Time.time + data.fireRate;
+        if (syringeAmmo) syringeAmmo.ConsumeAmmo();
+
+        if (audioSource && data.shootSound)
+            audioSource.PlayOneShot(data.shootSound);
+
+        PlayMuzzleFlash();
+
+        Vector3 origin = bulletSpawnPoint.position;
+        Vector3 dir = (worldPoint - origin).normalized;
+
+        if (Physics.Raycast(origin, dir, out RaycastHit hit, data.range, targetMask | obstacleMask))
+        {
+            Vector3 hitPoint = hit.point;
+            StartCoroutine(SpawnTrail(hitPoint));
+
+            if (((1 << hit.collider.gameObject.layer) & targetMask) != 0)
+            {
+                var zombie = hit.transform.GetComponent<ZombieAI>();
+                if (zombie != null && !zombie.IsDead && zombie.Faction == ZombieFaction.Enemy)
+                {
+                    zombie.alliedDuration = data.alliedDuration;
+                    zombie.Vaccinate();
+                    PlayHitEffect(hitPoint);
+                    if (audioSource && data.hitSound)
+                        audioSource.PlayOneShot(data.hitSound);
+                }
+            }
+        }
+        else
+        {
+            StartCoroutine(SpawnTrail(origin + dir * data.range));
+        }
+
+        StartCoroutine(ReloadCoroutine());
+    }
 
     private IEnumerator FireRaycast(Transform target, Vector3 hitPoint)
     {

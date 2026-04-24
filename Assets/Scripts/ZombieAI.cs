@@ -414,6 +414,18 @@ public class ZombieAI : MonoBehaviour
             _renderers[i].material.color = allied ? alliedTintColor : _originalColors[i];
         }
     }
+    private static void PlaySoundAtPoint(AudioClip clip, Vector3 position, float volume)
+    {
+        if (clip == null) return;
+        var go = new GameObject("ZombieDeathSound");
+        go.transform.position = position;
+        var src = go.AddComponent<AudioSource>();
+        src.spatialBlend = 1f; // 3D звук
+        src.volume = volume;
+        src.clip = clip;
+        src.Play();
+        Object.Destroy(go, clip.length);
+    }
 
     private IEnumerator DieDelayed()
     {
@@ -424,10 +436,11 @@ public class ZombieAI : MonoBehaviour
 
         animator.SetTrigger(s_Die);
 
-        if (audioSource != null && deathSounds != null && deathSounds.Length > 0)
+        if (deathSounds != null && deathSounds.Length > 0)
         {
             var clip = deathSounds[Random.Range(0, deathSounds.Length)];
-            if (clip != null) audioSource.PlayOneShot(clip);
+            float vol = audioSettings != null ? audioSettings.sfxVolume : 1f;
+            PlaySoundAtPoint(clip, transform.position, vol);
         }
 
         if (_collider) _collider.enabled = false;
@@ -439,12 +452,10 @@ public class ZombieAI : MonoBehaviour
         if (audioSource != null && puffSound != null)
             audioSource.PlayOneShot(puffSound);
 
-        if (deathParticlesPrefab != null)
+        if (puffSound != null)
         {
-            var go = Instantiate(deathParticlesPrefab, transform.position, Quaternion.identity);
-            var ps = go.GetComponent<ParticleSystem>();
-            float lifetime = ps != null ? ps.main.duration + ps.main.startLifetime.constantMax : 3f;
-            Destroy(go, lifetime);
+            float vol = audioSettings != null ? audioSettings.sfxVolume : 1f;
+            PlaySoundAtPoint(puffSound, transform.position, vol);
         }
 
         DropLoot();
