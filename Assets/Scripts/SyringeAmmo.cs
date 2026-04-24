@@ -17,6 +17,8 @@ public class SyringeAmmo : MonoBehaviour
     private int _inReserve;
     private bool _isReloading;
 
+    public bool IsReloading => _isReloading;
+
     public System.Action OnAmmoChanged;
 
     private void Start()

@@ -30,6 +30,8 @@ public class PlayerAmmo : MonoBehaviour
 
     private ShootMode _displayMode = ShootMode.Bullet;
 
+    public bool IsReloading => _isReloading;
+
     private void Start()
     {
         _magazineSize = weapon && weapon.data ? weapon.data.magazineSize : 30;

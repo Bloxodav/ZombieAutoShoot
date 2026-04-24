@@ -164,7 +164,7 @@ public class ZombieAI : MonoBehaviour
         {
             agent.enabled = true;
             agent.isStopped = false;
-            agent.stoppingDistance = 0f;
+            agent.stoppingDistance = minStopDistance;
             agent.autoBraking = false;
             _baseSpeed = agent.speed;
         }
@@ -239,6 +239,7 @@ public class ZombieAI : MonoBehaviour
                 if (agent && agent.enabled)
                 {
                     agent.isStopped = false;
+                    agent.stoppingDistance = minStopDistance;
                     agent.SetDestination(target.position);
                 }
                 animator.SetBool(s_IsWalking, true);

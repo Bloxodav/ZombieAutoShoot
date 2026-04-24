@@ -1,5 +1,5 @@
-using UnityEngine;
 using UnityEngine.Animations.Rigging;
+using UnityEngine;
 
 public class PlayerAimController : MonoBehaviour
 {
@@ -10,30 +10,36 @@ public class PlayerAimController : MonoBehaviour
     public float weightSpeed = 6f;
     public float heightOffset = 1.8f;
 
-    private Transform target;
-    private float weight;
+    private Vector3 _desiredPosition;
+    private float _weight;
+
+    private void Start()
+    {
+        if (aimTarget != null)
+            _desiredPosition = aimTarget.position;
+    }
 
     private void Update()
     {
-        if (target)
-        {
-            Vector3 pos = target.position + Vector3.up * heightOffset;
-            aimTarget.position = Vector3.Lerp(
-                aimTarget.position,
-                pos,
-                Time.deltaTime * smoothSpeed
-            );
+        // Плавно двигаем aimTarget к желаемой позиции (курсору)
+        aimTarget.position = Vector3.Lerp(
+            aimTarget.position,
+            _desiredPosition,
+            Time.deltaTime * smoothSpeed
+        );
 
-            weight = Mathf.MoveTowards(weight, 1f, Time.deltaTime * weightSpeed);
-        }
-        else
-        {
-            weight = Mathf.MoveTowards(weight, 0f, Time.deltaTime * weightSpeed);
-        }
-
-        aimConstraint.weight = weight;
+        // Всегда держим вес = 1 (всегда прицеливаемся)
+        _weight = Mathf.MoveTowards(_weight, 1f, Time.deltaTime * weightSpeed);
+        aimConstraint.weight = _weight;
     }
 
-    public void SetTarget(Transform t) => target = t;
-    public void ClearTarget() => target = null;
+    public void SetAimPoint(Vector3 worldPoint)
+    {
+        if (aimTarget != null)
+            _desiredPosition = worldPoint + Vector3.up * heightOffset;
+    }
+
+    // Оставь если используются где-то ещё, но они ничего не делают
+    public void SetTarget(Transform t) { }
+    public void ClearTarget() { }
 }

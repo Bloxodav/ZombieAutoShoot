@@ -15,8 +15,8 @@ MonoBehaviour:
   weaponName: AK47
   weaponType: 1
   damage: 40
-  range: 12
-  fireRate: 0.7
+  range: 500
+  fireRate: 0.5
   shootAngle: 360
   pellets: 6
   spreadAngle: 8

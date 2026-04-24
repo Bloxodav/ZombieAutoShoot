@@ -72,9 +72,13 @@ public class PlayerCombat : MonoBehaviour
         Plane groundPlane = new Plane(Vector3.up, transform.position);
 
         if (groundPlane.Raycast(ray, out float dist))
+        {
             _aimWorldPoint = ray.GetPoint(dist);
 
-        // ќбновл€ем aim target дл€ анимации
+            // ¬–≈ћ≈ЌЌќ Ч рисуй сферу в точке прицела
+            Debug.DrawLine(mainCamera.transform.position, _aimWorldPoint, Color.red);
+        }
+
         if (aimController != null)
             aimController.SetAimPoint(_aimWorldPoint);
     }

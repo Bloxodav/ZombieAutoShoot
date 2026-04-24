@@ -13,9 +13,6 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private Animator animator;
     [SerializeField] private float animationDampTime = 0.15f;
 
-    [Header("Cursor")]
-    public Texture2D cursorTexture;
-    public Vector2 cursorHotspot = Vector2.zero;
 
     public PlayerProgressSO progress;
     public CharacterDataSO characterData;
@@ -34,11 +31,6 @@ public class PlayerController : MonoBehaviour
 
         _baseSpeed = characterData.moveSpeed;
         moveSpeed = characterData.moveSpeed + progress.speedLevel * 0.5f;
-
-        // Курсор не вылазит за рамки
-        Cursor.lockState = CursorLockMode.Confined;
-        if (cursorTexture != null)
-            Cursor.SetCursor(cursorTexture, cursorHotspot, CursorMode.Auto);
     }
 
     private void Update()

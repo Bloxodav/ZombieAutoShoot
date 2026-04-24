@@ -24,6 +24,11 @@ public class CameraAspectController : MonoBehaviour
         AdjustCamera();
     }
 
+    private void Update()
+    {
+        AdjustCamera();
+    }
+
     public void AdjustCamera()
     {
         float targetRatio = referenceAspectRatio.x / referenceAspectRatio.y;

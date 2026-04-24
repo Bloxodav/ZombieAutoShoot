@@ -125,7 +125,9 @@ public class SyringeWeapon : MonoBehaviour
         PlayMuzzleFlash();
 
         Vector3 origin = bulletSpawnPoint.position;
-        Vector3 dir = (worldPoint - origin).normalized;
+        Vector3 dir = worldPoint - origin;
+        dir.y = 0f;
+        dir.Normalize();
 
         if (Physics.Raycast(origin, dir, out RaycastHit hit, data.range, targetMask | obstacleMask))
         {

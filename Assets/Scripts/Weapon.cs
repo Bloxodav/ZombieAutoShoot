@@ -29,6 +29,9 @@ public class Weapon : MonoBehaviour
     public AudioSettingsData audioSettings;
     [Range(0f, 1f)] public float shootVolume = 1f;
 
+    [Header("Projectile")]
+    public float projectileSpeed = 120f;
+
     [HideInInspector] public float nextFireTime;
 
     private Queue<TrailRenderer> _trailPool = new Queue<TrailRenderer>();
@@ -248,7 +251,9 @@ public class Weapon : MonoBehaviour
         }
 
         Vector3 origin = bulletSpawnPoint.position;
-        Vector3 dir = (worldPoint - origin).normalized;
+        Vector3 dir = worldPoint - origin;
+        dir.y = 0f;
+        dir.Normalize();
 
         if (Physics.Raycast(origin, dir, out RaycastHit hit, data.range, targetMask | obstacleMask))
         {
@@ -314,7 +319,7 @@ public class Weapon : MonoBehaviour
             yield break;
         }
 
-        float speed = 120f;
+        float speed = projectileSpeed ;
         float t = 0f;
 
         while (t < 1f)
