@@ -161,7 +161,12 @@ public class PlayerCombat : MonoBehaviour
         playerAmmo?.SetDisplayMode(_currentMode);
     }
 
-    public void OnWeaponSwitchComplete() => _isSwitching = false;
+    public void OnWeaponSwitchComplete()
+    {
+        _isSwitching = false;
+        if (currentWeapon != null)
+            currentWeapon.nextFireTime = Time.time + 0.15f;
+    }
 
     private void UpdateWeaponState()
     {

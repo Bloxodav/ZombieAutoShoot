@@ -15,7 +15,7 @@ MonoBehaviour:
   pickupType: 3
   dropChance: 0.05
   prefab: {fileID: 5324695540777317749, guid: ff98cf52192a1a149b7516391a081bba, type: 3}
-  pickupSound: {fileID: 8300000, guid: 9b4b43f21a2c9e34fb1df6016906b993, type: 3}
+  pickupSound: {fileID: 0}
   pickupEffect: {fileID: 7888857835762348946, guid: f8e010bc237d3184eb82abffb95414bb, type: 3}
   lifetime: 15
   hoverHeight: 0.5

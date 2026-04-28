@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using System.Collections;
 
@@ -7,7 +6,6 @@ public class PlayerHealth : MonoBehaviour
 {
     [Header("Health Settings")]
     public float maxHealth = 100f;
-    public Slider healthBar;
 
     [Header("Audio")]
     public AudioSource audioSource;
@@ -24,12 +22,6 @@ public class PlayerHealth : MonoBehaviour
     private void Start()
     {
         currentHealth = maxHealth;
-
-        if (healthBar != null)
-        {
-            healthBar.maxValue = maxHealth;
-            healthBar.value = currentHealth;
-        }
     }
 
     public void SetInvincible(bool value)
@@ -42,9 +34,6 @@ public class PlayerHealth : MonoBehaviour
         if (isDead || _invincible) return;
 
         currentHealth -= amount;
-
-        if (healthBar != null)
-            healthBar.value = currentHealth;
 
         if (audioSource != null && damageSound != null)
             audioSource.PlayOneShot(damageSound);
@@ -81,7 +70,6 @@ public class PlayerHealth : MonoBehaviour
     {
         if (isDead) return;
         currentHealth = Mathf.Min(currentHealth + amount, maxHealth);
-        if (healthBar != null) healthBar.value = currentHealth;
     }
 
     public float CurrentHealth => currentHealth;

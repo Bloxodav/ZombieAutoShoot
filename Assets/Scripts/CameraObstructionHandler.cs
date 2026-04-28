@@ -17,13 +17,12 @@ public class CameraObstructionHandler : MonoBehaviour
         public Color[] originalColors;
     }
 
-    private readonly Dictionary<Renderer, RenderState> active = new Dictionary<Renderer, RenderState>();
-
+    private readonly Dictionary<Renderer, RenderState> _active = new Dictionary<Renderer, RenderState>();
     private readonly HashSet<Renderer> _currentHitRenderers = new HashSet<Renderer>();
-    private readonly List<Renderer> _keys = new List<Renderer>(16);
+    private readonly List<Renderer> _toRemove = new List<Renderer>(16);
     private RaycastHit[] _hitBuffer = new RaycastHit[16];
 
-    void LateUpdate()
+    private void LateUpdate()
     {
         if (player == null || transparentNoCullTemplate == null) return;
 
@@ -31,122 +30,132 @@ public class CameraObstructionHandler : MonoBehaviour
         float dist = dir.magnitude;
 
         int hitCount = Physics.RaycastNonAlloc(
-            new Ray(transform.position, dir.normalized),
+            new Ray(transform.position, dir / dist),
             _hitBuffer, dist, obstacleMask);
 
         _currentHitRenderers.Clear();
 
         for (int h = 0; h < hitCount; h++)
         {
-            var hit = _hitBuffer[h];
-            if (hit.collider == null) continue;
+            if (_hitBuffer[h].collider == null) continue;
 
-            Renderer r = hit.collider.GetComponent<Renderer>();
-            if (r == null) r = hit.collider.GetComponentInParent<Renderer>();
+            Renderer r = _hitBuffer[h].collider.GetComponent<Renderer>()
+                      ?? _hitBuffer[h].collider.GetComponentInParent<Renderer>();
             if (r == null) continue;
 
             _currentHitRenderers.Add(r);
 
-            if (!active.ContainsKey(r))
+            if (_active.ContainsKey(r)) continue;
+
+            Material[] orig = r.sharedMaterials;
+            Material[] work = new Material[orig.Length];
+            Color[] origColors = new Color[orig.Length];
+
+            for (int i = 0; i < orig.Length; i++)
             {
-                Material[] orig = r.sharedMaterials;
-                Material[] work = new Material[orig.Length];
-                Color[] origColors = new Color[orig.Length];
+                Material m = orig[i];
+                Material inst = new Material(transparentNoCullTemplate);
 
-                for (int i = 0; i < orig.Length; i++)
+                if (m != null)
                 {
-                    Material m = orig[i];
-                    Material inst = new Material(transparentNoCullTemplate);
+                    CopyProperty(m, inst, "_MainTex");
+                    CopyProperty(m, inst, "_Color");
+                    CopyProperty(m, inst, "_BumpMap");
+                    CopyFloatProperty(m, inst, "_Metallic");
+                    CopyFloatProperty(m, inst, "_Glossiness");
 
-                    if (m != null)
+                    if (m.IsKeywordEnabled("_EMISSION") && inst.HasProperty("_EmissionColor"))
                     {
-                        if (m.HasProperty("_MainTex") && inst.HasProperty("_MainTex"))
-                        {
-                            inst.SetTexture("_MainTex", m.GetTexture("_MainTex"));
-                            inst.mainTextureScale = m.mainTextureScale;
-                            inst.mainTextureOffset = m.mainTextureOffset;
-                        }
-                        if (m.HasProperty("_Color") && inst.HasProperty("_Color"))
-                            inst.SetColor("_Color", m.GetColor("_Color"));
-                        if (m.HasProperty("_BumpMap") && inst.HasProperty("_BumpMap"))
-                        {
-                            Texture bump = m.GetTexture("_BumpMap");
-                            if (bump != null) { inst.SetTexture("_BumpMap", bump); inst.EnableKeyword("_NORMALMAP"); }
-                        }
-                        if (m.HasProperty("_Metallic") && inst.HasProperty("_Metallic"))
-                            inst.SetFloat("_Metallic", m.GetFloat("_Metallic"));
-                        if (m.HasProperty("_Glossiness") && inst.HasProperty("_Glossiness"))
-                            inst.SetFloat("_Glossiness", m.GetFloat("_Glossiness"));
-                        if (m.IsKeywordEnabled("_EMISSION") && inst.HasProperty("_EmissionColor"))
-                        {
-                            inst.SetColor("_EmissionColor", m.GetColor("_EmissionColor"));
-                            inst.EnableKeyword("_EMISSION");
-                        }
+                        inst.SetColor("_EmissionColor", m.GetColor("_EmissionColor"));
+                        inst.EnableKeyword("_EMISSION");
                     }
-
-                    Color instColor = inst.HasProperty("_Color") ? inst.GetColor("_Color") : Color.white;
-                    instColor.a = (m != null && m.HasProperty("_Color")) ? m.GetColor("_Color").a : 1f;
-                    if (inst.HasProperty("_Color")) inst.SetColor("_Color", instColor);
-                    inst.renderQueue = 3000;
-
-                    work[i] = inst;
-                    origColors[i] = (m != null && m.HasProperty("_Color")) ? m.GetColor("_Color") : Color.white;
                 }
 
-                r.materials = work;
-                active.Add(r, new RenderState
-                {
-                    renderer = r,
-                    originalMaterials = orig,
-                    workingMaterials = work,
-                    originalColors = origColors
-                });
+                Color c = inst.HasProperty("_Color") ? inst.GetColor("_Color") : Color.white;
+                c.a = (m != null && m.HasProperty("_Color")) ? m.GetColor("_Color").a : 1f;
+                if (inst.HasProperty("_Color")) inst.SetColor("_Color", c);
+                inst.renderQueue = 3000;
+
+                work[i] = inst;
+                origColors[i] = (m != null && m.HasProperty("_Color")) ? m.GetColor("_Color") : Color.white;
             }
+
+            r.materials = work;
+            _active[r] = new RenderState
+            {
+                renderer = r,
+                originalMaterials = orig,
+                workingMaterials = work,
+                originalColors = origColors
+            };
         }
 
-        _keys.Clear();
-        _keys.AddRange(active.Keys);
+        _toRemove.Clear();
 
-        foreach (var kvp in new Dictionary<Renderer, RenderState>(active))
+        foreach (var kvp in _active)
         {
-            var r = kvp.Key;
-            var state = kvp.Value;
+            Renderer r = kvp.Key;
+            RenderState state = kvp.Value;
+
             if (_currentHitRenderers.Contains(r))
             {
-                FadeTo(state.workingMaterials, state.originalColors, targetAlpha, fadeSpeed);
+                FadeTo(state.workingMaterials, state.originalColors, targetAlpha);
             }
             else
             {
-                bool finished = FadeToOriginal(state);
-                if (finished)
-                {
-                    if (state.renderer != null)
-                        state.renderer.sharedMaterials = state.originalMaterials;
-                    for (int i = 0; i < state.workingMaterials.Length; i++)
-                        if (state.workingMaterials[i] != null)
-                            Destroy(state.workingMaterials[i]);
-                    active.Remove(r);
-                }
+                if (FadeToOriginal(state))
+                    _toRemove.Add(r);
             }
+        }
+
+        for (int i = 0; i < _toRemove.Count; i++)
+        {
+            RenderState state = _active[_toRemove[i]];
+            if (state.renderer != null)
+                state.renderer.sharedMaterials = state.originalMaterials;
+            for (int j = 0; j < state.workingMaterials.Length; j++)
+                if (state.workingMaterials[j] != null)
+                    Destroy(state.workingMaterials[j]);
+            _active.Remove(_toRemove[i]);
         }
     }
 
-    private bool FadeTo(Material[] workingMats, Color[] originalColors, float target, float speed)
+    private void CopyProperty(Material src, Material dst, string prop)
     {
-        bool allReached = true;
-        for (int i = 0; i < workingMats.Length; i++)
+        if (!src.HasProperty(prop) || !dst.HasProperty(prop)) return;
+        if (prop == "_MainTex")
         {
-            var mat = workingMats[i];
-            if (mat == null || !mat.HasProperty("_Color")) continue;
-            Color c = mat.GetColor("_Color");
-            float origA = (originalColors != null && i < originalColors.Length) ? originalColors[i].a : 1f;
-            float desired = Mathf.Clamp(target, 0f, origA);
-            float newA = Mathf.MoveTowards(c.a, desired, speed * Time.deltaTime);
-            c.a = newA;
-            mat.SetColor("_Color", c);
-            if (Mathf.Abs(newA - desired) > 0.01f) allReached = false;
+            dst.SetTexture(prop, src.GetTexture(prop));
+            dst.mainTextureScale = src.mainTextureScale;
+            dst.mainTextureOffset = src.mainTextureOffset;
         }
-        return allReached;
+        else if (prop == "_BumpMap")
+        {
+            Texture bump = src.GetTexture(prop);
+            if (bump != null) { dst.SetTexture(prop, bump); dst.EnableKeyword("_NORMALMAP"); }
+        }
+        else
+        {
+            dst.SetColor(prop, src.GetColor(prop));
+        }
+    }
+
+    private void CopyFloatProperty(Material src, Material dst, string prop)
+    {
+        if (src.HasProperty(prop) && dst.HasProperty(prop))
+            dst.SetFloat(prop, src.GetFloat(prop));
+    }
+
+    private void FadeTo(Material[] mats, Color[] origColors, float target)
+    {
+        for (int i = 0; i < mats.Length; i++)
+        {
+            if (mats[i] == null || !mats[i].HasProperty("_Color")) continue;
+            Color c = mats[i].GetColor("_Color");
+            float origA = i < origColors.Length ? origColors[i].a : 1f;
+            c.a = Mathf.MoveTowards(c.a, Mathf.Clamp(target, 0f, origA), fadeSpeed * Time.deltaTime);
+            mats[i].SetColor("_Color", c);
+        }
     }
 
     private bool FadeToOriginal(RenderState state)
@@ -154,14 +163,13 @@ public class CameraObstructionHandler : MonoBehaviour
         bool allReached = true;
         for (int i = 0; i < state.workingMaterials.Length; i++)
         {
-            var mat = state.workingMaterials[i];
+            Material mat = state.workingMaterials[i];
             if (mat == null || !mat.HasProperty("_Color")) continue;
-            float origA = (state.originalColors != null && i < state.originalColors.Length) ? state.originalColors[i].a : 1f;
+            float origA = i < state.originalColors.Length ? state.originalColors[i].a : 1f;
             Color c = mat.GetColor("_Color");
-            float newA = Mathf.MoveTowards(c.a, origA, fadeSpeed * Time.deltaTime);
-            c.a = newA;
+            c.a = Mathf.MoveTowards(c.a, origA, fadeSpeed * Time.deltaTime);
             mat.SetColor("_Color", c);
-            if (Mathf.Abs(newA - origA) > 0.01f) allReached = false;
+            if (Mathf.Abs(c.a - origA) > 0.01f) allReached = false;
         }
         return allReached;
     }

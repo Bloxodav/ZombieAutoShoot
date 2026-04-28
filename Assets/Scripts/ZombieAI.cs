@@ -21,8 +21,18 @@ public class ZombieAI : MonoBehaviour
 
     [Header("Allied")]
     public float alliedDuration = 8f;
-    public Color alliedTintColor = new Color(0.2f, 1f, 0.3f);
     public float alliedSpeedMultiplier = 1.3f;
+    public GameObject alliedVFX;
+    public float alliedDamageMultiplier = 2f;
+    public float alliedAttackCooldownMultiplier = 0.5f;
+    public float alliedScaleMultiplier = 1.5f;
+    public float blinkStartTime = 3f;
+    public float blinkInterval = 0.3f;
+
+    private Vector3 _baseScale;
+    private float _baseDamage;
+    private float _baseAttackCooldown;
+    private Coroutine _blinkCoroutine;
 
     [Header("Effects")]
     public GameObject deathParticlesPrefab;
@@ -38,21 +48,12 @@ public class ZombieAI : MonoBehaviour
 
     [Header("Audio")]
     public AudioSource audioSource;
-
-    [Header("Звуки зомби (рычание)")]
     public AudioClip[] growlSounds;
     [Range(3f, 10f)] public float growlIntervalMin = 4f;
     [Range(3f, 10f)] public float growlIntervalMax = 8f;
-
-    [Header("Звуки смерти")]
     public AudioClip[] deathSounds;
-
-    [Header("Звук дыма")]
     public AudioClip puffSound;
-    [Header("Звук атаки")]
     public AudioClip attackSound;
-
-    private float _nextGrowlTime;
 
     public AudioSettingsData audioSettings;
     [Range(0f, 1f)] public float growlVolume = 0.3f;
@@ -76,8 +77,8 @@ public class ZombieAI : MonoBehaviour
     private Collider _collider;
 
     private Renderer[] _renderers;
+    private Material[][] _cachedMaterials;
     private Color[] _originalColors;
-    private bool _visualsInitialized;
 
     private static readonly int s_IsWalking = Animator.StringToHash("isWalking");
     private static readonly int s_Attack = Animator.StringToHash("attack");
@@ -92,6 +93,11 @@ public class ZombieAI : MonoBehaviour
         animator = animator ? animator : GetComponent<Animator>();
         _collider = GetComponent<Collider>();
 
+        _baseScale = transform.localScale;
+        _baseDamage = damage;
+        _baseAttackCooldown = attackCooldown;
+        if (alliedVFX) alliedVFX.SetActive(false);
+
         if (Camera.main != null)
             _cachedCameraTransform = Camera.main.transform;
 
@@ -104,13 +110,15 @@ public class ZombieAI : MonoBehaviour
     private void CacheRenderers()
     {
         _renderers = GetComponentsInChildren<Renderer>();
+        _cachedMaterials = new Material[_renderers.Length][];
         _originalColors = new Color[_renderers.Length];
+
         for (int i = 0; i < _renderers.Length; i++)
         {
-            if (_renderers[i].material.HasProperty("_Color"))
-                _originalColors[i] = _renderers[i].material.color;
+            _cachedMaterials[i] = _renderers[i].materials;
+            if (_cachedMaterials[i].Length > 0 && _cachedMaterials[i][0].HasProperty("_Color"))
+                _originalColors[i] = _cachedMaterials[i][0].color;
         }
-        _visualsInitialized = true;
     }
 
     private void OnEnable()
@@ -125,6 +133,7 @@ public class ZombieAI : MonoBehaviour
     {
         ZombieFactionRegistry.Unregister(this);
     }
+
     private IEnumerator GrowlLoop()
     {
         yield return new WaitForSeconds(Random.Range(0f, growlIntervalMax));
@@ -137,10 +146,10 @@ public class ZombieAI : MonoBehaviour
                 float vol = growlVolume * (audioSettings != null ? audioSettings.sfxVolume : 1f);
                 audioSource.PlayOneShot(clip, vol);
             }
-
             yield return new WaitForSeconds(Random.Range(growlIntervalMin, growlIntervalMax));
         }
     }
+
     public void ResetState()
     {
         OnDeath = null;
@@ -179,7 +188,11 @@ public class ZombieAI : MonoBehaviour
             animator.Update(0f);
         }
 
-        ApplyAlliedVisuals(false);
+        if (_blinkCoroutine != null) { StopCoroutine(_blinkCoroutine); _blinkCoroutine = null; }
+        if (alliedVFX) alliedVFX.SetActive(false);
+        transform.localScale = _baseScale;
+        damage = _baseDamage;
+        attackCooldown = _baseAttackCooldown;
     }
 
     private void SetupHealthBars()
@@ -194,23 +207,19 @@ public class ZombieAI : MonoBehaviour
 
     private void Update()
     {
-        if (healthBarCanvas && healthBarCanvas.gameObject.activeInHierarchy
-            && _cachedCameraTransform != null)
+        if (healthBarCanvas && healthBarCanvas.gameObject.activeInHierarchy && _cachedCameraTransform != null)
             healthBarCanvas.transform.rotation = _cachedCameraTransform.rotation;
 
         if (healthBarFill)
-            healthBarFill.fillAmount = Mathf.MoveTowards(
-                healthBarFill.fillAmount, _targetDamageFill, Time.deltaTime * damageBarSpeed * 10f); // быстрее
+            healthBarFill.fillAmount = Mathf.MoveTowards(healthBarFill.fillAmount, _targetDamageFill, Time.deltaTime * damageBarSpeed * 10f);
 
         if (damageBarFill)
-            damageBarFill.fillAmount = Mathf.MoveTowards(
-                damageBarFill.fillAmount, _targetDamageFill, Time.deltaTime * damageBarSpeed); // медленнее
+            damageBarFill.fillAmount = Mathf.MoveTowards(damageBarFill.fillAmount, _targetDamageFill, Time.deltaTime * damageBarSpeed);
 
         if (Faction == ZombieFaction.Allied)
         {
             _alliedTimer -= Time.deltaTime;
-            if (_alliedTimer <= 0f)
-                RevertToEnemy();
+            if (_alliedTimer <= 0f) RevertToEnemy();
         }
     }
 
@@ -223,11 +232,7 @@ public class ZombieAI : MonoBehaviour
         {
             RefreshTarget();
 
-            if (!target)
-            {
-                yield return waitLong;
-                continue;
-            }
+            if (!target) { yield return waitLong; continue; }
 
             float sqrDist = (transform.position - target.position).sqrMagnitude;
             float sqrRange = attackRange * attackRange;
@@ -269,21 +274,11 @@ public class ZombieAI : MonoBehaviour
 
         Transform nearestAlly = ZombieFactionRegistry.GetNearestAlly(transform);
 
-        if (nearestAlly == null)
-        {
-            target = _cachedPlayerTransform;
-            return;
-        }
-
-        if (_cachedPlayerTransform == null)
-        {
-            target = nearestAlly;
-            return;
-        }
+        if (nearestAlly == null) { target = _cachedPlayerTransform; return; }
+        if (_cachedPlayerTransform == null) { target = nearestAlly; return; }
 
         float distToAlly = (nearestAlly.position - transform.position).sqrMagnitude;
         float distToPlayer = (_cachedPlayerTransform.position - transform.position).sqrMagnitude;
-
         target = distToAlly < distToPlayer ? nearestAlly : _cachedPlayerTransform;
     }
 
@@ -304,8 +299,7 @@ public class ZombieAI : MonoBehaviour
         Vector3 dir = target.position - transform.position;
         dir.y = 0f;
         if (dir.sqrMagnitude > 0.001f)
-            transform.rotation = Quaternion.Slerp(
-                transform.rotation, Quaternion.LookRotation(dir), Time.deltaTime * 10f);
+            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(dir), Time.deltaTime * 40f);
     }
 
     private IEnumerator Attack()
@@ -347,12 +341,12 @@ public class ZombieAI : MonoBehaviour
         {
             healthBarCanvas.gameObject.SetActive(true);
             _targetDamageFill = _currentHealth / maxHealth;
-            // обе полоски плавно догоняют target, красная в 3х быстрее белой
         }
 
         if (_currentHealth <= 0f)
             StartCoroutine(DieDelayed());
     }
+
     public void SyncHealthToMax()
     {
         _currentHealth = maxHealth;
@@ -361,10 +355,12 @@ public class ZombieAI : MonoBehaviour
         if (damageBarFill) damageBarFill.fillAmount = 1f;
         if (healthBarCanvas) healthBarCanvas.gameObject.SetActive(false);
     }
+
     public void SyncBaseSpeed()
     {
         if (agent) _baseSpeed = agent.speed;
     }
+
     public void Vaccinate()
     {
         if (_isDead) return;
@@ -382,7 +378,12 @@ public class ZombieAI : MonoBehaviour
         if (agent && _baseSpeed > 0f)
             agent.speed = _baseSpeed * alliedSpeedMultiplier;
 
-        ApplyAlliedVisuals(true);
+        transform.localScale = _baseScale * alliedScaleMultiplier;
+        damage = _baseDamage * alliedDamageMultiplier;
+        attackCooldown = _baseAttackCooldown * alliedAttackCooldownMultiplier;
+        if (alliedVFX) alliedVFX.SetActive(true);
+        if (_blinkCoroutine != null) StopCoroutine(_blinkCoroutine);
+        _blinkCoroutine = StartCoroutine(AlliedVFXBlink());
         OnVaccinated?.Invoke(this);
     }
 
@@ -401,27 +402,37 @@ public class ZombieAI : MonoBehaviour
         if (agent && _baseSpeed > 0f)
             agent.speed = _baseSpeed;
 
-        ApplyAlliedVisuals(false);
+        transform.localScale = _baseScale;
+        damage = _baseDamage;
+        attackCooldown = _baseAttackCooldown;
+        if (alliedVFX) alliedVFX.SetActive(false);
         OnRevertedToEnemy?.Invoke(this);
     }
-
-    private void ApplyAlliedVisuals(bool allied)
+    private IEnumerator AlliedVFXBlink()
     {
-        if (!_visualsInitialized || _renderers == null) return;
-        for (int i = 0; i < _renderers.Length; i++)
+        yield return new WaitForSeconds(alliedDuration - blinkStartTime);
+
+        if (alliedVFX == null) yield break;
+
+        float elapsed = 0f;
+        while (elapsed < blinkStartTime)
         {
-            if (_renderers[i] == null) continue;
-            if (!_renderers[i].material.HasProperty("_Color")) continue;
-            _renderers[i].material.color = allied ? alliedTintColor : _originalColors[i];
+            alliedVFX.SetActive(!alliedVFX.activeSelf);
+            yield return new WaitForSeconds(blinkInterval);
+            elapsed += blinkInterval;
         }
+
+        alliedVFX.SetActive(false);
+        _blinkCoroutine = null;
     }
+
     private static void PlaySoundAtPoint(AudioClip clip, Vector3 position, float volume)
     {
         if (clip == null) return;
         var go = new GameObject("ZombieDeathSound");
         go.transform.position = position;
         var src = go.AddComponent<AudioSource>();
-        src.spatialBlend = 1f; // 3D звук
+        src.spatialBlend = 1f;
         src.volume = volume;
         src.clip = clip;
         src.Play();
@@ -450,8 +461,13 @@ public class ZombieAI : MonoBehaviour
 
         yield return new WaitForSeconds(timeBeforeSmoke);
 
-        if (audioSource != null && puffSound != null)
-            audioSource.PlayOneShot(puffSound);
+        if (deathParticlesPrefab != null)
+        {
+            var ps = Instantiate(deathParticlesPrefab, transform.position, Quaternion.identity);
+            var p = ps.GetComponent<ParticleSystem>();
+            float lifetime = p != null ? p.main.duration + p.main.startLifetime.constantMax : 3f;
+            Destroy(ps, lifetime);
+        }
 
         if (puffSound != null)
         {

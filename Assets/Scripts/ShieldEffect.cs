@@ -19,7 +19,6 @@ public class ShieldEffect : MonoBehaviour
     [Header("Звук")]
     public AudioSource audioSource;
     public AudioClip activateSound;
-    public AudioClip deactivateSound;
 
     private PlayerHealth _playerHealth;
     private Vector3 _baseScale;
@@ -75,7 +74,6 @@ public class ShieldEffect : MonoBehaviour
         _active = false;
         if (shieldModel != null) shieldModel.SetActive(false);
         _playerHealth?.SetInvincible(false);
-        audioSource?.PlayOneShot(deactivateSound);
     }
 
     public float TimeRemaining => _timer;
